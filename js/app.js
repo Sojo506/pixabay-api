@@ -1,7 +1,11 @@
 const result = document.querySelector("#result");
 const form = document.querySelector("#form");
+const pagination = document.querySelector("#pagination");
+
 const numberOfPages = 40;
-let pages; 
+let pages;
+let iterator;
+let actualPage = 1;
 
 window.onload = () => {
   form.addEventListener("submit", formValidate);
@@ -48,17 +52,24 @@ function showAlert(message) {
   }
 }
 
-function searghImages(searchTerm) {
+function searghImages() {
+  const searchTerm = document.querySelector("#term").value;
+
   const key = "33306477-b09d02a7015541fa942019361";
-  const url = `https://pixabay.com/api/?key=${key}&q=${searchTerm}`;
+  const url = `https://pixabay.com/api/?key=${key}&q=${searchTerm}&page=${actualPage}`;
 
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
       pages = calculatePages(data.totalHits);
-      console.log("🚀 ~ file: app.js:58 ~ .then ~ pages", pages)
       showImages(data.hits);
     });
+}
+
+function* createPagination(tatol) {
+  for (let i = 1; i <= tatol; i++) {
+    yield i;
+  }
 }
 
 function calculatePages(total) {
@@ -91,4 +102,44 @@ function showImages(images) {
     </div>
     `;
   });
+
+  while (pagination.firstChild) {
+    pagination.removeChild(pagination.firstChild);
+  }
+
+  showPagination();
+}
+
+function showPagination() {
+  iterator = createPagination(pages);
+
+  while (true) {
+    const { value, done } = iterator.next();
+
+    if (done) return;
+
+    const btn = document.createElement("a");
+    btn.href = "#";
+    btn.dataset.page = value;
+    btn.textContent = value;
+    btn.classList.add(
+      "next",
+      "bg-white",
+      "px-4",
+      "py-1",
+      "mr-2",
+      "font-bold",
+      "mb-10",
+      "uppercase",
+      "rounded",
+      "text-blue-800"
+    );
+
+    btn.onclick = () => {
+      actualPage = value;
+      searghImages()
+    };
+
+    pagination.appendChild(btn);
+  }
 }
